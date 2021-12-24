@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript">
+        function addNewCustomer() {
+            event.preventDefault();
+            let firstName = $('#firstName').val();
+            let lastName = $('#lastName').val();
+            let newCustomer = {
+                firstName: firstName,
+                lastName: lastName
+            }
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                type: "POST",
+                data: JSON.stringify(newCustomer),
+                url: "/customers",
+                success: successHandler
+            })
+        }
+
+        function successHandler(){
+            $.ajax({
+                type: "GET",
+                url: "/customers",
+                success: function (data) {
+                    let content = '    <tr>\n' +
+                        '        <td>id</td>\n' +
+                        '        <td>first name</td>\n' +
+                        '        <td>last name</td>\n' +
+                        '        <td>Delete</td>\n' +
+                        '    </tr>';
+                    for (let i = 0; i < data.length; i++) {
+                        content += getCustomer(data[i]);
+                    }
+                    document.getElementById('customerList').innerHTML = content;
+                }
+            });
+        }
+
+        function getCustomer(customer){
+            return `<tr><td >${customer.id}</td><td >${customer.firstName}</td><td >${customer.lastName}</td>` +
+                `<td><button onclick="deleteByButton(${customer.id})">Delete</button></td></tr>`;
+        }
+
+        function deleteByButton(id) {
+            let customerId = id;
+            $.ajax({
+                type: "DELETE",
+                url: `/customers/${customerId}`,
+                success: successHandler
+            });
+        }
+
+    </script>
+</head>
+<body>
+<form id="add-customer">
+    <table>
+        <tr>
+            <td>first name:</td>
+            <td><input type="text" id="firstName"></td>
+        </tr>
+        <tr>
+            <td>last name:</td>
+            <td><input type="text" id="lastName"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" value="Add" onclick="addNewCustomer()"></td>
+        </tr>
+    </table>
+</form>
+<h1>Customer List</h1>
+<table id="customerList">
+    <tr>
+        <td>id</td>
+        <td>first name</td>
+        <td>last name</td>
+        <td>Delete</td>
+    </tr>
+    <th:block th:each="customer: ${customers}">
+        <tr>
+            <td th:text="${customer.id}"></td>
+            <td th:text="${customer.firstName}"></td>
+            <td th:text="${customer.lastName}"></td>
+            <td>
+                <button th:onclick="'deleteByButton('+${customer.id}+')'">Delete</button>
+            </td>
+
+            <!--            onclick vs thymeleaf-->
+        </tr>
+    </th:block>
+</table>
+</body>
+</html>

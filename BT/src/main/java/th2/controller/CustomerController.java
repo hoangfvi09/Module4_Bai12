@@ -1,5 +1,6 @@
 package th2.controller;
 
+import org.springframework.web.servlet.ModelAndView;
 import th2.model.Customer;
 import th2.service.customer.ICustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/customers")
+@RequestMapping("/customers")
 public class CustomerController {
 
     @Autowired
@@ -26,6 +27,19 @@ public class CustomerController {
         return new ResponseEntity<>(customers, HttpStatus.OK);
     }
 
+    @GetMapping("/list")
+    public ModelAndView showList(){
+        List<Customer> customers = (List<Customer>) customerService.findAll();
+        ModelAndView modelAndView = new ModelAndView("/list");
+        modelAndView.addObject("customers", customers);
+        return modelAndView;
+    }
+
+    @PostMapping
+    public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
+        return new ResponseEntity<>(customerService.save(customer), HttpStatus.CREATED);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Customer> findCustomerById(@PathVariable Long id) {
         Optional<Customer> customerOptional = customerService.findById(id);
@@ -33,11 +47,6 @@ public class CustomerController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(customerOptional.get(), HttpStatus.OK);
-    }
-
-    @PostMapping
-    public ResponseEntity<Customer> saveCustomer(@RequestBody Customer customer) {
-        return new ResponseEntity<>(customerService.save(customer), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
