@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -25,7 +26,7 @@
             })
         }
 
-        function successHandler(){
+        function successHandler() {
             $.ajax({
                 type: "GET",
                 url: "/customers",
@@ -35,6 +36,7 @@
                         '        <td>first name</td>\n' +
                         '        <td>last name</td>\n' +
                         '        <td>Delete</td>\n' +
+                        '        <td>Edit</td>\n' +
                         '    </tr>';
                     for (let i = 0; i < data.length; i++) {
                         content += getCustomer(data[i]);
@@ -44,9 +46,47 @@
             });
         }
 
-        function getCustomer(customer){
+        function getCustomer(customer) {
             return `<tr><td >${customer.id}</td><td >${customer.firstName}</td><td >${customer.lastName}</td>` +
-                `<td><button onclick="deleteByButton(${customer.id})">Delete</button></td></tr>`;
+                `<td><button onclick="deleteByButton(${customer.id})">Delete</button></td>` +
+                `<td><button onclick="showEditForm(${customer.id})">Edit</button></td></tr>`;
+        }
+
+        function showEditForm(id) {
+            let customerId = id;
+            $("#edit-form").show();
+            $.ajax({
+                url: `/customers/${customerId}`,
+                type: "GET",
+                success: function (response) {
+                    console.log(response);
+                    $("#cus_id").text(response.id);
+                    $("#edit_first").val(response.firstName);
+                    $("#edit_last").val(response.lastName);
+                }
+            })
+        }
+
+        function updateCustomer() {
+            let id = $('#cus_id').val();
+            let firstName = $('#edit_first').val();
+            let lastName = $('#edit_last').val();
+            let newCustomer = {
+                id: id,
+                firstName: firstName,
+                lastName: lastName
+            }
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                type: "PUT",
+                data: JSON.stringify(newCustomer),
+                url: `/customers/${id}`,
+                success: successHandler
+            })
+
         }
 
         function deleteByButton(id) {
@@ -57,6 +97,10 @@
                 success: successHandler
             });
         }
+
+        $(document).ready(function () {
+            $("#edit-form").hide();
+        });
 
     </script>
 </head>
@@ -84,6 +128,7 @@
         <td>first name</td>
         <td>last name</td>
         <td>Delete</td>
+        <td>edit</td>
     </tr>
     <th:block th:each="customer: ${customers}">
         <tr>
@@ -93,10 +138,34 @@
             <td>
                 <button th:onclick="'deleteByButton('+${customer.id}+')'">Delete</button>
             </td>
-
+            <td>
+                <button th:onclick="'showEditForm('+${customer.id}+')'">
+                    edit
+                </button>
+            </td>
             <!--            onclick vs thymeleaf-->
         </tr>
     </th:block>
 </table>
+<form id="edit-form">
+    <table>
+        <tr>
+            <td>id:</td>
+            <td><p id="cus_id"></p></td>
+        </tr>
+        <tr>
+            <td>first name:</td>
+            <td><input type="text" id="edit_first"></td>
+        </tr>
+        <tr>
+            <td>last name:</td>
+            <td><input type="text" id="edit_last"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" value="Edit" onclick="updateCustomer()"></td>
+        </tr>
+    </table>
+</form>
 </body>
 </html>
